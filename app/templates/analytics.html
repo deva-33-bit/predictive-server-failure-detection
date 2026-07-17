@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Analytics — ServerGuard AI{% endblock %}
+{% block content %}
+
+<h1>Model Analytics</h1>
+
+<div class="analytics-grid">
+  <div class="analytics-card">
+    <h3>ROC Curve</h3>
+    <img src="{{ url_for('static', filename='roc_curve.png') }}" alt="ROC Curve">
+  </div>
+  <div class="analytics-card">
+    <h3>Confusion Matrix</h3>
+    <img src="{{ url_for('static', filename='confusion_matrix.png') }}" alt="Confusion Matrix">
+  </div>
+  <div class="analytics-card">
+    <h3>Feature Importance</h3>
+    <img src="{{ url_for('static', filename='feature_importance.png') }}" alt="Feature Importance">
+  </div>
+  <div class="analytics-card">
+    <h3>Feature Correlation with Failure</h3>
+    <img src="{{ url_for('static', filename='correlation_with_failure.png') }}" alt="Correlation">
+  </div>
+</div>
+
+{% endblock %}

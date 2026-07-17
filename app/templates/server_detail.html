@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Server #{{ server.server_id }} — ServerGuard AI{% endblock %}
+{% block content %}
+
+<a href="/">&larr; Back to dashboard</a>
+<h1>Server #{{ server.server_id }}</h1>
+<div class="badge badge-{{ server.risk|lower }} big-badge">{{ server.risk }} RISK</div>
+
+<div class="detail-top-grid">
+  <div class="gauge-card">
+    {% set health = server.health_score %}
+    {% set gauge_color = "var(--low)" if health >= 60 else ("var(--medium)" if health >= 30 else "var(--high)") %}
+    <svg viewBox="0 0 200 120" class="gauge-svg">
+      <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="var(--panel-border)" stroke-width="16" stroke-linecap="round"/>
+      <path d="M 20 100 A 80 80 0 0 1 180 100"
+            fill="none" stroke="{{ gauge_color }}" stroke-width="16" stroke-linecap="round"
+            stroke-dasharray="251.2" stroke-dashoffset="{{ 251.2 - (251.2 * health / 100) }}"/>
+      <text x="100" y="90" text-anchor="middle" class="gauge-value">{{ health }}%</text>
+      <text x="100" y="112" text-anchor="middle" class="gauge-label">HEALTH SCORE</text>
+    </svg>
+  </div>
+
+  <div class="metric-bars">
+    {% set metrics = [
+      ("CPU Usage", server.cpu_usage, 100, "%"),
+      ("Memory Usage", server.memory_usage, 100, "%"),
+      ("Disk Usage", server.disk_usage, 100, "%"),
+      ("Temperature", server.temperature_c, 100, "°C")
+    ] %}
+    {% for label, value, max_val, unit in metrics %}
+    {% set pct = (value / max_val * 100) if max_val else 0 %}
+    {% set bar_color = "var(--high)" if pct >= 80 else ("var(--medium)" if pct >= 60 else "var(--low)") %}
+    <div class="bar-row">
+      <div class="bar-label"><span>{{ label }}</span><strong>{{ value }}{{ unit }}</strong></div>
+      <div class="bar-track"><div class="bar-fill" style="width: {{ pct }}%; background: {{ bar_color }};"></div></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div class="detail-card"><span>Fan Speed</span><strong>{{ server.fan_speed_rpm }} RPM</strong></div>
+  <div class="detail-card"><span>Power Draw</span><strong>{{ server.power_watts }} W</strong></div>
+  <div class="detail-card"><span>Error Count</span><strong>{{ server.error_count }}</strong></div>
+  <div class="detail-card"><span>Uptime</span><strong>{{ server.uptime_hours }} hrs</strong></div>
+  <div class="detail-card"><span>Failure Probability</span><strong>{{ (server.failure_probability * 100) | round(1) }}%</strong></div>
+</div>
+
+<h2>Why AI Predicted This</h2>
+<div class="explain-panel">
+  {% for e in explanation %}
+  <div class="explain-row">
+    <span class="explain-feature">{{ e.feature }}</span>
+    <div class="explain-bar-track">
+      <div class="explain-bar-fill {{ 'up' if e.direction == 'increases' else 'down' }}"
+           style="width: {{ e.impact_pct|abs }}%;"></div>
+    </div>
+    <span class="explain-pct {{ 'up' if e.direction == 'increases' else 'down' }}">
+      {{ "+" if e.direction == "increases" else "-" }}{{ e.impact_pct|abs }}%
+    </span>
+  </div>
+  {% endfor %}
+  <p class="explain-note">Based on SHAP values from the Random Forest model — shows which factors pushed this prediction toward or away from failure risk.</p>
+</div>
+
+<h2>Recommended Action</h2>
+<ul class="recommendations priority-list">
+  {% for rec in recommendations %}
+  <li class="priority-{{ rec.priority }}">
+    <span class="priority-tag">{{ "🔴" if rec.priority == 1 else ("🟠" if rec.priority == 2 else "🟡") }} Priority {{ rec.priority }}</span>
+    {{ rec.text }}
+  </li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Predict — ServerGuard AI{% endblock %}
+{% block content %}
+
+<h1>Manual Failure Prediction</h1>
+<p>Enter server telemetry values to get a failure probability prediction.</p>
+
+<form method="POST" class="predict-form">
+  <div class="form-grid">
+    {% for col in columns %}
+    <label>
+      {{ col.replace('_', ' ').title() }}
+      <input type="number" step="any" name="{{ col }}"
+             value="{{ result.inputs[col] if result else '' }}" required>
+    </label>
+    {% endfor %}
+  </div>
+  <button type="submit">Predict Failure Risk</button>
+</form>
+
+{% if result %}
+<div class="result-card risk-{{ result.risk|lower }}">
+  <h2>Prediction Result</h2>
+  <p class="prob">Failure Probability: <strong>{{ result.probability }}%</strong></p>
+  <p>Risk Level: <span class="badge badge-{{ result.risk|lower }}">{{ result.risk }}</span></p>
+</div>
+
+<h2>Why AI Predicted This</h2>
+<div class="explain-panel">
+  {% for e in result.explanation %}
+  <div class="explain-row">
+    <span class="explain-feature">{{ e.feature }}</span>
+    <div class="explain-bar-track">
+      <div class="explain-bar-fill {{ 'up' if e.direction == 'increases' else 'down' }}"
+           style="width: {{ e.impact_pct|abs }}%;"></div>
+    </div>
+    <span class="explain-pct {{ 'up' if e.direction == 'increases' else 'down' }}">
+      {{ "+" if e.direction == "increases" else "-" }}{{ e.impact_pct|abs }}%
+    </span>
+  </div>
+  {% endfor %}
+  <p class="explain-note">Based on SHAP values from the Random Forest model.</p>
+</div>
+
+<h2>Recommended Action</h2>
+<ul class="recommendations priority-list">
+  {% for rec in result.recommendations %}
+  <li class="priority-{{ rec.priority }}">
+    <span class="priority-tag">{{ "🔴" if rec.priority == 1 else ("🟠" if rec.priority == 2 else "🟡") }} Priority {{ rec.priority }}</span>
+    {{ rec.text }}
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+{% endblock %}

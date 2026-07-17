@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — ServerGuard AI{% endblock %}
+{% block content %}
+
+<h1>Fleet Overview</h1>
+
+<div class="stat-cards">
+  <div class="stat-card">
+    <div class="stat-value">{{ total }}</div>
+    <div class="stat-label">Total Servers</div>
+  </div>
+  <div class="stat-card healthy">
+    <div class="stat-value">{{ healthy }}</div>
+    <div class="stat-label">Healthy Servers</div>
+  </div>
+  <div class="stat-card critical">
+    <div class="stat-value">{{ critical }}</div>
+    <div class="stat-label">Critical Servers</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ avg_health }}%</div>
+    <div class="stat-label">Average Health Score</div>
+  </div>
+</div>
+
+<h2>Servers (sorted by risk)</h2>
+<table class="server-table">
+  <thead>
+    <tr>
+      <th>Server ID</th>
+      <th>CPU %</th>
+      <th>Memory %</th>
+      <th>Temp (°C)</th>
+      <th>Errors</th>
+      <th>Health Score</th>
+      <th>Failure Probability</th>
+      <th>Risk</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in servers %}
+    <tr class="risk-{{ s.risk|lower }}">
+      <td>#{{ s.server_id }}</td>
+      <td>{{ s.cpu_usage }}</td>
+      <td>{{ s.memory_usage }}</td>
+      <td>{{ s.temperature_c }}</td>
+      <td>{{ s.error_count }}</td>
+      <td>{{ s.health_score }}%</td>
+      <td>{{ (s.failure_probability * 100) | round(1) }}%</td>
+      <td><span class="badge badge-{{ s.risk|lower }}">{{ s.risk }}</span></td>
+      <td><a href="/server/{{ s.server_id }}">View</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
